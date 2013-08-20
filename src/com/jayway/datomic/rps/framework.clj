@@ -16,7 +16,7 @@
 (defn handle-command [command conn]
   "Apply the command to its target aggregate using optimistic concurrency. Returns the datomic transaction."
   (let [aggregate-id (:aggregate-id command)
-        state (-> conn d/db (d/entity aggregate-id))
+        state (datomic.api/entity (datomic.api/db conn) aggregate-id)
         modification (c/perform command state)
         old-version (:entity/version state)
         next-version (if (nil? old-version) 0 (inc old-version))
