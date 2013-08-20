@@ -14,9 +14,9 @@
 
 (f/initialize-schema conn)
 
-(def ply1 (f/create-entity conn "player"))
-(def ply2 (f/create-entity conn "player"))
-(def game-id (f/create-entity conn "game"))
+(def ply1 (f/create-entity conn))
+(def ply2 (f/create-entity conn))
+(def game-id (f/create-entity conn))
 
 (defn -main [& args]
   (f/handle-command (domain/->SetPlayerEmailCommand ply1 "one@example.com") conn)

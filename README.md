@@ -1,6 +1,6 @@
 # rock-paper-scissors-with-datomic
 
-An exploration of how to implementrock-paper-scissors using Commands and Aggregates with Datomic.
+An exploration of how to implement rock-paper-scissors using Commands and Aggregates with Datomic.
 
 ## Usage
 

@@ -6,11 +6,10 @@
   (let [schema-tx (read-string (slurp "resources/schema.dtm"))]
     @(d/transact conn schema-tx)))
 
-(defn create-entity [conn type]
+(defn create-entity [conn]
   "Returns the id of the new entity."
   (let [optimistic-concurrency [:db.fn/cas #db/id[:db.part/user -1] :entity/version nil 0]
-        tx @(d/transact conn [{:db/id #db/id[:db.part/user -1]
-                                     :entity/type type}
+        tx @(d/transact conn [{:db/id #db/id[:db.part/user -1]}
                               optimistic-concurrency])]
     (first (vals (:tempids tx)))))
 

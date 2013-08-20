@@ -11,8 +11,8 @@
 
 (f/initialize-schema conn)
 
-(def ply1 (f/create-entity conn "player"))
-(def ply2 (f/create-entity conn "player"))
+(def ply1 (f/create-entity conn))
+(def ply2 (f/create-entity conn))
 (f/handle-command (domain/->SetPlayerEmailCommand ply1 "one@example.com") conn)
 (f/handle-command (domain/->SetPlayerEmailCommand ply2 "two@example.com") conn)
 
@@ -21,24 +21,24 @@
 
 (deftest functional-test
   (testing "rock beats scissors"
-    (let [game-id (f/create-entity conn "game")]
+    (let [game-id (f/create-entity conn)]
       (f/handle-command (domain/->CreateGameCommand game-id ply1 :move.type/rock) conn)
       (f/handle-command (domain/->DecideMoveCommand game-id ply2 :move.type/scissors) conn)
       (is (= :game.state/won (:game/state (get-entity game-id))))
       (is (= (get-entity ply1) (:game/winner (get-entity game-id))))))
   (testing "tie"
-    (let [game-id (f/create-entity conn "game")]
+    (let [game-id (f/create-entity conn)]
       (f/handle-command (domain/->CreateGameCommand game-id ply1 :move.type/paper) conn)
       (f/handle-command (domain/->DecideMoveCommand game-id ply2 :move.type/paper) conn)
       (is (= :game.state/tied (:game/state (get-entity game-id))))
       (is (= nil (:game/winner (get-entity game-id))))))
   (testing "should not play against self"
-    (let [game-id (f/create-entity conn "game")]
+    (let [game-id (f/create-entity conn)]
       (f/handle-command (domain/->CreateGameCommand game-id ply1 :move.type/paper) conn)
       (is (thrown? Exception
                    (f/handle-command (domain/->DecideMoveCommand game-id ply1 :move.type/rock) conn)))))
   (testing "cannot start twice"
-    (let [game-id (f/create-entity conn "game")]
+    (let [game-id (f/create-entity conn)]
       (f/handle-command (domain/->CreateGameCommand game-id ply1 :move.type/paper) conn)
       (is (thrown? Exception
                    (f/handle-command (domain/->CreateGameCommand game-id ply1 :move.type/paper) conn))))))
