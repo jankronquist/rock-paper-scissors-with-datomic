@@ -1,8 +1,8 @@
 (ns com.jayway.datomic.rps.test.functional
   (:require [clojure.test :refer :all]
-            [datomic.api :as datomic] 
+            [datomic.api :as datomic]
             [com.jayway.datomic.rps.core :as c]
-            [com.jayway.datomic.rps.framework :as f] 
+            [com.jayway.datomic.rps.framework :as f]
             [com.jayway.datomic.rps.domain :as domain]))
 
 (def uri "datomic:mem://game")

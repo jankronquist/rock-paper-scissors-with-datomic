@@ -1,5 +1,4 @@
-(ns com.jayway.datomic.rps.core
-  (:require [datomic.api :only [q db] :as d]))
+(ns com.jayway.datomic.rps.core)
 
 (defprotocol CommandHandler
   (perform [command state]))
