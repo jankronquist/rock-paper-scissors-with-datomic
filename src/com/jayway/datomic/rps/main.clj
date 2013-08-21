@@ -1,16 +1,16 @@
 (ns com.jayway.datomic.rps.main
-  (:require [datomic.api :refer [db] :as d]
+  (:require [datomic.api :as datomic]
             [com.jayway.datomic.rps.core :as c]
             [com.jayway.datomic.rps.framework :as f]
             [com.jayway.datomic.rps.domain :as domain]))
 
 (def uri "datomic:mem://game")
-(d/create-database uri)
-(def conn (d/connect uri))
+(datomic/create-database uri)
+(def conn (datomic/connect uri))
 
 (defn print-entity [entity-id]
-  (let [e (d/entity (db conn) entity-id)]
-    (println "entity: " (d/touch e))))
+  (let [e (datomic/entity (datomic/db conn) entity-id)]
+    (println "entity: " (datomic/touch e))))
 
 (f/initialize-schema conn)
 
@@ -24,4 +24,4 @@
   (f/handle-command (domain/->CreateGameCommand game-id ply1 :move.type/rock) conn)
   (f/handle-command (domain/->DecideMoveCommand game-id ply2 :move.type/scissors) conn)
   (print-entity game-id)
-  (d/shutdown true))
+  (datomic/shutdown true))

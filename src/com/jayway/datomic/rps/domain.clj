@@ -1,5 +1,5 @@
 (ns com.jayway.datomic.rps.domain
-  (:require [datomic.api :as d]
+  (:require [datomic.api :as datomic]
             [com.jayway.datomic.rps.core :as c]))
 
 (defrecord SetPlayerEmailCommand [aggregate-id email])
@@ -29,7 +29,7 @@
   (c/perform [{:keys [player move aggregate-id]} state]
     (when (:game/state state)
       (throw (ex-info "Already in started" {:state state})))
-    (let [move-id (d/tempid :db.part/user)]
+    (let [move-id (datomic/tempid :db.part/user)]
       [{:db/id move-id
         :move/player player
         :move/type move}
@@ -46,7 +46,7 @@
       (throw (ex-info "Cannot play against yourself" {:player player})))
     (let [creator-move (:move/type (first (:game/moves state)))
           creator-id (:db/id (:game/created-by state))
-          move-id (d/tempid :db.part/user)]
+          move-id (datomic/tempid :db.part/user)]
       [{:db/id move-id
         :move/player player
         :move/type move}
