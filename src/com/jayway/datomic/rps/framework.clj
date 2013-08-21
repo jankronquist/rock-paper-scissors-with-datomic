@@ -9,7 +9,7 @@
 (defn create-entity [conn]
   "Returns the id of the new entity."
   (let [temp-id (datomic/tempid :db.part/user)
-        optimistic-concurrency [:db.fn/cas temp-id :entity/version nil 0]
+        optimistic-concurrency [:db.fn/cas temp-id :aggregate/version nil 0]
         tx @(datomic/transact conn [{:db/id temp-id} optimistic-concurrency])]
     (datomic/resolve-tempid (datomic/db conn) (:tempids tx) temp-id)))
 
@@ -17,8 +17,8 @@
   "Apply the command to its target aggregate using optimistic concurrency. Returns the datomic transaction."
   (let [state (datomic/entity (datomic/db conn) aggregate-id)
         modification (c/perform command state)
-        old-version (:entity/version state)
+        old-version (:aggregate/version state)
         next-version ((fnil inc -1) old-version)
-        optimistic-concurrency [:db.fn/cas aggregate-id :entity/version old-version next-version]
+        optimistic-concurrency [:db.fn/cas aggregate-id :aggregate/version old-version next-version]
         tx @(datomic/transact conn (conj modification optimistic-concurrency))]
     tx))

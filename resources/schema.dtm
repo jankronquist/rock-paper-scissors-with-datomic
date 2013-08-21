@@ -1,9 +1,9 @@
 [
 
- ;; entity
+ ;; framework aggregate
 
   {:db/id #db/id[:db.part/db]
-  :db/ident :entity/version
+  :db/ident :aggregate/version
   :db/valueType :db.type/long
   :db/cardinality :db.cardinality/one
   :db.install/_attribute :db.part/db}
