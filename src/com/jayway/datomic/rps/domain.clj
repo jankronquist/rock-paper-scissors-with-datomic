@@ -1,5 +1,6 @@
 (ns com.jayway.datomic.rps.domain
-  (:require [com.jayway.datomic.rps.core :as c]))
+  (:require [datomic.api :as d]
+            [com.jayway.datomic.rps.core :as c]))
 
 (defrecord SetPlayerEmailCommand [aggregate-id email])
 
@@ -18,42 +19,44 @@
 (defmethod compare-moves [:move.type/scissors :move.type/scissors] [x y] :tie)
 
 (extend-protocol c/CommandHandler
-  
+
   SetPlayerEmailCommand
   (c/perform [command state]
     [{:db/id (:aggregate-id command)
       :player/email (:email command)}])
-  
+
   CreateGameCommand
-  (c/perform [command state]
+  (c/perform [{:keys [player move aggregate-id]} state]
     (when (:game/state state)
-      (throw (Exception. "Already in started")))
-    [{:db/id #db/id[:db.part/user -1]
-      :move/player (:player command)
-      :move/type (:move command)}
-     {:db/id (:aggregate-id command)
-      :game/moves #db/id[:db.part/user -1]
-      :game/state :game.state/started
-      :game/created-by (:player command)}])
+      (throw (ex-info "Already in started" {:state state})))
+    (let [move-id (d/tempid :db.part/user)]
+      [{:db/id move-id
+        :move/player player
+        :move/type move}
+       {:db/id aggregate-id
+        :game/moves move-id
+        :game/state :game.state/started
+        :game/created-by player}]))
 
   DecideMoveCommand
-  (c/perform [command state]
+  (c/perform [{:keys [player move aggregate-id]} state]
     (when-not (= (:game/state state) :game.state/started)
-      (throw (Exception. "Incorrect state")))
-    (when (= (:db/id (:game/created-by state)) (:player command))
-      (throw (Exception. "Cannot play against yourself")))
+      (throw (ex-info "Incorrect state" {:state state})))
+    (when (= (:db/id (:game/created-by state)) player)
+      (throw (ex-info "Cannot play against yourself" {:player player})))
     (let [creator-move (:move/type (first (:game/moves state)))
-          creator-id (:db/id (:game/created-by state))]
-	    [{:db/id #db/id[:db.part/user -1]
-	      :move/player (:player command)
-	      :move/type (:move command)}
-	     (merge {:db/id (:aggregate-id command)
-              :game/moves #db/id[:db.part/user -1]}
-	            (case (compare-moves (:move command) creator-move)
-	              :victory {:game/state :game.state/won 
-	                        :game/winner (:player command) 
-	                        :game/loser creator-id}   
-	              :loss {:game/state :game.state/won 
-	                        :game/winner creator-id 
-	                        :game/loser (:player command)}
-	              :tie {:game/state :game.state/tied}))])))
+          creator-id (:db/id (:game/created-by state))
+          move-id (d/tempid :db.part/user)]
+      [{:db/id move-id
+        :move/player player
+        :move/type move}
+       (merge {:db/id aggregate-id
+               :game/moves move-id}
+              (case (compare-moves move creator-move)
+                :victory {:game/state :game.state/won
+                          :game/winner player
+                          :game/loser creator-id}
+                :loss {:game/state :game.state/won
+                       :game/winner creator-id
+                       :game/loser player}
+                :tie {:game/state :game.state/tied}))])))
