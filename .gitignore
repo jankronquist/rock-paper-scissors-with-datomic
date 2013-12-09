@@ -12,3 +12,7 @@ pom.xml.asc
 .lein-repl-history
 .settings
 /bin
+.lein-env
+.classpath
+.nrepl-port
+.project

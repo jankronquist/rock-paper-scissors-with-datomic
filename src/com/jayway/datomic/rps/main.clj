@@ -21,7 +21,8 @@
 (defn -main [& args]
   (f/handle-command (domain/->SetPlayerEmailCommand ply1 "one@example.com") conn)
   (f/handle-command (domain/->SetPlayerEmailCommand ply2 "two@example.com") conn)
-  (f/handle-command (domain/->CreateGameCommand game-id ply1 :move.type/rock) conn)
+  (f/handle-command (domain/->OnlyCreateGameCommand game-id ply1) conn)
+  (f/handle-command (domain/->DecideMoveCommand game-id ply1 :move.type/rock) conn)
   (f/handle-command (domain/->DecideMoveCommand game-id ply2 :move.type/scissors) conn)
   (print-entity game-id)
   (datomic/shutdown true))

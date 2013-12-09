@@ -26,6 +26,13 @@
       (f/handle-command (domain/->DecideMoveCommand game-id ply2 :move.type/scissors) conn)
       (is (= :game.state/won (:game/state (get-entity game-id))))
       (is (= (get-entity ply1) (:game/winner (get-entity game-id))))))
+  (testing "separate create game"
+    (let [game-id (f/create-entity conn)]
+      (f/handle-command (domain/->OnlyCreateGameCommand game-id ply1) conn)
+      (f/handle-command (domain/->DecideMoveCommand game-id ply1 :move.type/rock) conn)
+      (f/handle-command (domain/->DecideMoveCommand game-id ply2 :move.type/scissors) conn)
+      (is (= :game.state/won (:game/state (get-entity game-id))))
+      (is (= (get-entity ply1) (:game/winner (get-entity game-id))))))
   (testing "tie"
     (let [game-id (f/create-entity conn)]
       (f/handle-command (domain/->CreateGameCommand game-id ply1 :move.type/paper) conn)

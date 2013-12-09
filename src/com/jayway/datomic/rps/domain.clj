@@ -5,6 +5,7 @@
 (defrecord SetPlayerEmailCommand [aggregate-id email])
 
 (defrecord CreateGameCommand [aggregate-id player move])
+(defrecord OnlyCreateGameCommand [aggregate-id player])
 (defrecord DecideMoveCommand [aggregate-id player move])
 
 (defmulti compare-moves vector)
@@ -38,25 +39,37 @@
         :game/state :game.state/started
         :game/created-by player}]))
 
+  OnlyCreateGameCommand
+  (c/perform [{:keys [player aggregate-id]} state]
+    (when (:game/state state)
+      (throw (ex-info "Already in started" {:state state})))
+    [{:db/id aggregate-id
+      :game/state :game.state/started
+      :game/created-by player}])
+
   DecideMoveCommand
   (c/perform [{:keys [player move aggregate-id]} state]
     (when-not (= (:game/state state) :game.state/started)
       (throw (ex-info "Incorrect state" {:state state})))
-    (when (= (:db/id (:game/created-by state)) player)
+    (when (= (:db/id (:move/player (first (:game/moves state)))) player)
       (throw (ex-info "Cannot play against yourself" {:player player})))
-    (let [creator-move (:move/type (first (:game/moves state)))
+    (let [other-move (:move/type (first (:game/moves state)))
           creator-id (:db/id (:game/created-by state))
-          move-id (datomic/tempid :db.part/user)]
-      [{:db/id move-id
-        :move/player player
-        :move/type move}
-       (merge {:db/id aggregate-id
-               :game/moves move-id}
-              (case (compare-moves move creator-move)
-                :victory {:game/state :game.state/won
-                          :game/winner player
-                          :game/loser creator-id}
-                :loss {:game/state :game.state/won
-                       :game/winner creator-id
-                       :game/loser player}
-                :tie {:game/state :game.state/tied}))])))
+          move-id (datomic/tempid :db.part/user)
+          move-entity {:db/id move-id
+                       :move/player player
+                       :move/type move}
+          aggregate-entity {:db/id aggregate-id
+                            :game/moves move-id}]
+      [move-entity
+       (if-not other-move
+         aggregate-entity
+         (merge aggregate-entity
+                (case (compare-moves move other-move)
+                  :victory {:game/state :game.state/won
+                            :game/winner player
+                            :game/loser creator-id}
+                  :loss {:game/state :game.state/won
+                         :game/winner creator-id
+                         :game/loser player}
+                  :tie {:game/state :game.state/tied})))])))
